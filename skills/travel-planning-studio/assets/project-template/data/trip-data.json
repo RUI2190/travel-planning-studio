@@ -1,0 +1,28 @@
+{
+  "trip": {
+    "destination": "REPLACE_ME",
+    "timezone": "REPLACE_ME",
+    "start_date": "",
+    "end_date": ""
+  },
+  "publication": {
+    "visibility": "private",
+    "public_poi_fields": [
+      "id",
+      "name",
+      "category",
+      "area",
+      "address",
+      "lat",
+      "lon",
+      "coordinate_system",
+      "coordinate_precision",
+      "reason",
+      "opening_notes",
+      "sources"
+    ]
+  },
+  "pois": [],
+  "days": [],
+  "assumptions": []
+}
