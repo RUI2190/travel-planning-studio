@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>绩溪·徽州慢旅行地图</title>
+<meta name="description" content="面向所有旅行者的绩溪与徽州公共地点地图，提供分类筛选、搜索、路线规划和外部导航。">
+<link rel="stylesheet" href="./leaflet.css">
+<style>
+html,body,#map{height:100%;margin:0} body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:#25302b}
+#map{background:#e8e4da} .top{position:absolute;z-index:1000;left:12px;right:12px;top:12px;background:rgba(255,253,248,.96);border-radius:16px;padding:10px 12px;box-shadow:0 5px 24px #0002;max-width:720px}
+.search-row{display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;border:1px solid #d9d6cf;border-radius:12px;background:#fff}.search-icon{width:17px;height:17px;flex:0 0 auto;color:#69716d}.search-row input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:#25302b;font:14px inherit}.search-row input::placeholder{color:#8b918e}.search-results{display:none;position:absolute;z-index:2;left:12px;right:12px;top:55px;max-height:min(320px,55vh);overflow:auto;background:#fffdf8;border:1px solid #e3ded4;border-radius:13px;padding:5px;box-shadow:0 10px 28px #0003}.search-results.show{display:block}.search-result{display:grid;grid-template-columns:1fr auto;gap:3px 10px;width:100%;border:0;border-bottom:1px solid #eee9df;background:transparent;padding:9px 10px;text-align:left;color:#25302b}.search-result:last-child{border-bottom:0}.search-result b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}.search-result small{grid-column:1;font-size:11px;color:#747b77}.search-result em{grid-column:2;grid-row:1/3;align-self:center;border:1px solid currentColor;border-radius:999px;padding:3px 7px;font-size:10px;font-style:normal}.search-empty{padding:12px;text-align:center;color:#7b817e;font-size:12px}
+.filters{display:flex;gap:7px;overflow-x:auto;margin-top:8px;padding:0 2px 3px;-webkit-overflow-scrolling:touch;scrollbar-width:none}.filters::-webkit-scrollbar{display:none}.f{--cat:#5f6b66;--cat-bg:#f4f1eb;display:inline-flex;align-items:center;white-space:nowrap;border:2px solid var(--cat);background:var(--cat-bg);color:var(--cat);border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700;transition:.16s} .f.off{opacity:.48;background:#fff;color:#727875;border-color:#b9bfbc}
+.locate{position:absolute;right:12px;bottom:32px;z-index:1000;background:#fff;border:0;border-radius:50%;width:48px;height:48px;box-shadow:0 3px 14px #0003;font-size:20px}
+.route-toggle{position:absolute;right:70px;bottom:32px;z-index:1000;height:48px;border:0;border-radius:24px;padding:0 15px;background:#294b3d;color:white;box-shadow:0 3px 14px #0003;font-size:14px;font-weight:750} .route-toggle b{display:inline-grid;place-items:center;min-width:21px;height:21px;margin-left:4px;padding:0 2px;border-radius:11px;background:#fff;color:#294b3d;font-size:12px}
+.route-box{display:none;position:fixed;z-index:1150;left:12px;right:12px;bottom:92px;max-height:46vh;overflow:auto;background:#fffdf8;border-radius:18px;padding:12px 14px;box-shadow:0 8px 34px #0004} .route-box.show{display:block}.route-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.route-head h2{font-size:18px;margin:0}.route-head button{width:30px;height:30px;border:0;border-radius:50%;background:#eee6da;font-size:18px}.route-modes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.route-mode{border:1px solid #d7d3ca;border-radius:10px;background:white;color:#4e5752;padding:7px 2px;font-size:12px}.route-mode.active{border-color:#294b3d;background:#294b3d;color:white;font-weight:700}.route-stops-wrap{border-top:1px solid #eee9df;margin:2px 0 8px}.route-stops-wrap summary{display:flex;justify-content:space-between;align-items:center;padding:7px 1px 5px;cursor:pointer;font-size:13px;font-weight:700}.route-stops-wrap summary small{color:#7b817e;font-size:10px;font-weight:400}.route-stops{list-style:none;max-height:118px;overflow:auto;padding:0;margin:0}.route-stops .empty{color:#7b817e;background:#f3eee5;border-radius:9px;padding:8px;font-size:12px}.route-stop{display:grid;grid-template-columns:25px 1fr auto;align-items:center;gap:7px;padding:6px 0;border-bottom:1px solid #eee9df}.route-stop .num{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#e5eee9;color:#294b3d;font-size:12px;font-weight:800}.route-stop .stop-name{font-size:12px;line-height:1.25}.stop-tools{display:flex;gap:2px}.stop-tools button{width:26px;height:26px;border:0;background:#f0ebe2;border-radius:7px;color:#59615d}.route-actions{display:grid;grid-template-columns:1.35fr 1.15fr .7fr;gap:6px}.route-actions button{border:0;border-radius:10px;padding:8px 4px;text-align:center;font-size:12px;background:#294b3d;color:white}.route-actions .secondary{background:#e9e3d8;color:#25302b}.route-actions button:disabled{opacity:.45}.route-result{display:none;margin-top:8px;padding:8px 10px;border-radius:11px;background:#eef4f0;font-size:12px;line-height:1.45}.route-result.show{display:block}.route-result.error{background:#fff0e8;color:#80472f}.external-links{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:7px}.external-links a{border-radius:9px;padding:7px 4px;text-align:center;text-decoration:none;background:#294b3d;color:white;font-weight:700}.external-links a.apple{background:#222}.route-credit{margin-top:6px;color:#7b817e;font-size:10px}.route-credit summary{cursor:pointer}.route-credit span{display:block;margin-top:3px;line-height:1.4}.route-add{grid-column:1/-1!important;background:#3e7657!important}
+.panel{position:fixed;z-index:1200;left:0;right:0;bottom:0;background:#fffdf8;border-radius:22px 22px 0 0;box-shadow:0 -5px 30px #0003;padding:18px 18px calc(18px + env(safe-area-inset-bottom));transform:translateY(110%);transition:.22s;max-height:64vh;overflow:auto}
+.panel.show{transform:translateY(0)} .panel h2{margin:0 35px 4px 0;font-size:22px} .tag{display:inline-block;font-size:11px;padding:3px 8px;border-radius:999px;background:#eee6d9;margin:2px 4px 7px 0}
+.addr{background:#f3eee5;border-radius:12px;padding:10px;margin:8px 0;font-size:14px} .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0} .actions button,.actions a{border:0;border-radius:12px;padding:11px;text-align:center;text-decoration:none;background:#294b3d;color:white;font-size:14px} .actions .secondary{background:#e9e3d8;color:#25302b}
+.close{position:absolute;right:14px;top:14px;border:0;background:#eee6da;border-radius:50%;width:30px;height:30px}
+.leaflet-popup-content-wrapper{border-radius:12px}.route-number-marker{pointer-events:none!important}.legend{position:absolute;z-index:1000;left:12px;bottom:32px;border:0;background:#fffdf8ee;color:#48514d;border-radius:18px;padding:9px 12px;font-size:11px;box-shadow:0 2px 10px #0002;white-space:nowrap}.legend .legend-full{display:none;white-space:normal;text-align:left;line-height:1.45}.legend.open{right:12px;bottom:92px;border-radius:12px}.legend.open .legend-short{display:none}.legend.open .legend-full{display:block}.leaflet-top.leaflet-right{transition:top .18s}
+@media(min-width:850px){.top{left:20px;top:20px} .panel{left:auto;right:20px;bottom:20px;width:390px;border-radius:20px;max-height:75vh}.legend{left:20px}.legend.open{right:auto;max-width:420px}.route-box{left:20px;right:auto;width:370px;bottom:92px}}
+</style></head>
+<body>
+<div id="map"></div>
+<div class="top"><div class="search-row"><svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="m16 16 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><input id="searchInput" type="search" autocomplete="off" placeholder="搜索地点、看点、区域或类别" aria-label="搜索地点、看点、区域或类别"></div>
+<div class="search-results" id="searchResults" role="listbox" aria-label="搜索结果"></div>
+<div class="filters" id="filters"></div></div>
+<button class="locate" onclick="locateMe()" title="定位">◎</button>
+<button class="route-toggle" id="routeToggle" onclick="toggleRoutePanel()" title="多点路线">路线 <b id="routeCount">0</b></button>
+<section class="route-box" id="routeBox" aria-label="多点路线规划">
+  <div class="route-head"><h2>多点路线规划</h2><button onclick="toggleRoutePanel(false)" aria-label="收起">−</button></div>
+  <div class="route-modes" id="routeModes">
+    <button class="route-mode active" data-mode="pedestrian" onclick="setRouteMode('pedestrian')">步行</button>
+    <button class="route-mode" data-mode="bicycle" onclick="setRouteMode('bicycle')">骑车</button>
+    <button class="route-mode" data-mode="auto" onclick="setRouteMode('auto')">开车</button>
+    <button class="route-mode" data-mode="multimodal" onclick="setRouteMode('multimodal')">公交</button>
+  </div>
+  <details class="route-stops-wrap" id="routeStopsWrap" open><summary><span id="routeStopSummary">路线地点（0）</span><small>查看 / 排序</small></summary><ol class="route-stops" id="routeStops"><li class="empty">从任意地点详情中点“加入路线”，至少选择 2 个地点。</li></ol></details>
+  <div class="route-actions"><button id="planRoute" onclick="planRoute()" disabled>计算路线</button><button class="secondary" onclick="copyRoute()">复制路线清单</button><button class="secondary" onclick="clearRoute()">清空</button></div>
+  <div class="route-result" id="routeResult"></div>
+  <details class="route-credit"><summary>路线数据说明</summary><span>页内路线使用 Valhalla / OpenStreetMap 开放数据；公交班次覆盖不足时可转外部地图继续规划。</span></details>
+</section>
+<button class="legend" id="legend" onclick="toggleLegend()"><span class="legend-short">ⓘ 地图说明</span><span class="legend-full">这是面向所有旅行者的公共地点地图，不包含个人行程或预订信息。底图优先使用中国大陆可访问服务，加载失败会自动切换备用底图。酒店和小店若未公开精确经纬度，会以地址邻近点表示；导航时建议使用“复制地址/名称”。营业、票价和活动安排可能变化，请以官方或现场信息为准。再次点击可收起。</span></button>
+<div class="panel" id="panel"><button class="close" onclick="closePanel()">×</button><div id="panelBody"></div></div>
+<script src="./leaflet.js"></script>
+<script>
+const pois=[
+  {"name":"绩溪北站","cat":"交通","lat":30.071139,"lon":118.571604,"area":"绩溪县城","addr":"安徽省宣城市绩溪县龙川大道","note":"绩溪主要高铁交通节点，出站后可打车前往绩溪古城、博物馆和县城住宿区。","nav":"绩溪北站"},
+  {"name":"绩溪古城安遇酒店","cat":"酒店","lat":30.0712,"lon":118.5952,"area":"绩溪县城","addr":"安徽省宣城市绩溪县适之街010号","note":"绩溪古城片区的住宿选择，靠近绩溪博物馆、文庙与中正坊步行线；房态和价格请通过正规渠道查询。","nav":"绩溪古城安遇酒店"},
+  {"name":"绩溪博物馆","cat":"景点","lat":30.071397,"lon":118.595564,"area":"绩溪县城","addr":"安徽省宣城市绩溪县良安路100号附近","note":"可看李兴钢设计的建筑和庭院，以及绩溪山水、徽商人文、三雕徽墨与徽菜民俗。常规开放参考08:00–17:00、16:30停止入馆，节假日安排请以官方公告为准。","nav":"绩溪博物馆"},
+  {"name":"红泥美食坊","cat":"正餐","lat":30.0719,"lon":118.5948,"area":"绩溪县城","addr":"安徽省宣城市绩溪县良安路76号","note":"位于博物馆和文庙附近的徽菜选择，可关注石耳炖土鸡、绩溪炒粉丝和当地时令菜；高峰期建议提前确认营业与等位情况。","nav":"红泥美食坊 绩溪"},
+  {"name":"绩溪早茶馆·绩溪味道","cat":"早餐","lat":30.0669,"lon":118.5868,"area":"绩溪县城","addr":"安徽省宣城市绩溪县华阳镇聚和圆徽菜馆斜对面","note":"适合体验挞粿、水馅包等绩溪传统点心；营业时间请在到访前复核。","nav":"绩溪早茶馆 绩溪味道"},
+  {"name":"聚和圆·老绩溪菜","cat":"正餐","lat":30.0672,"lon":118.5865,"area":"绩溪县城","addr":"安徽省宣城市绩溪县梓潼路48号","note":"县城本地菜选择，浇头面、绩溪焖粉、南瓜焖粿等较有代表性；营业与排队情况请以现场为准。","nav":"聚和圆 绩溪 梓潼路48号"},
+  {"name":"中国徽菜文化交流中心","cat":"正餐","lat":30.0738,"lon":118.5777,"area":"绩溪县城","addr":"安徽省宣城市绩溪县龙川大道150号","note":"可体验胡适一品锅、绩溪焖粉、毛豆腐和小挞粿等徽菜；营业时间和订餐方式请通过商家公开渠道确认。","nav":"中国徽菜文化交流中心 绩溪"},
+  {"name":"绩溪·糸巷非遗街区（徽厨博物馆）","cat":"逛店","lat":30.0668,"lon":118.5875,"area":"绩溪古城","addr":"安徽省宣城市绩溪县梓潼路57号","note":"由老缫丝厂片区更新而来的非遗街区，可看徽墨、三雕、竹编、古法印泥等展示与店铺，也可了解徽菜和徽厨文化。","nav":"绩溪 糸巷 梓潼路57号"},
+  {"name":"龙川景区","cat":"景点","lat":30.077517,"lon":118.669893,"area":"龙川","addr":"安徽省宣城市绩溪县瀛洲镇龙川景区","note":"建议预留2.5–3小时，可依次看水街、明代牌坊、胡宗宪少保府、胡氏宗祠和龙川驿道。重点留意牌坊石雕、宗祠“四和图”及梁枋门窗木雕；具体开放范围以景区现场为准。","nav":"绩溪龙川景区"},
+  {"name":"仁里旅游度假区","cat":"景点","lat":30.033926,"lon":118.610987,"area":"仁里","addr":"安徽省宣城市绩溪县瀛洲镇仁里村","note":"适合沿明清街巷、程开甲院士故居、光启堂和溪边慢走，重点体验生活化古村与程氏家风。鱼灯等活动的时间和集合点请向景区或村内商户确认。","nav":"绩溪仁里旅游度假区"},
+  {"name":"红霞农家乐","cat":"正餐","lat":30.0342,"lon":118.6112,"area":"仁里","addr":"安徽省宣城市绩溪县瀛洲镇仁里村","note":"仁里村内的农家徽味选择，可关注黑猪肉和当季乡土菜；散客接待、营业与等位情况请提前确认。","nav":"红霞农家乐 绩溪仁里"},
+  {"name":"上庄景区/胡适故居","cat":"景点","lat":30.123159,"lon":118.44418,"area":"上庄","addr":"安徽省宣城市绩溪县上庄镇上庄村","note":"上庄人文慢游的核心，可结合杨林水口、胡适故居、胡开文纪念馆、上庄书局和村巷一起游览，分别了解人物故居、徽墨产业与村落空间。","nav":"胡适故居 绩溪上庄"},
+  {"name":"放空水口咖啡","cat":"咖啡","lat":30.1218,"lon":118.446,"area":"上庄","addr":"安徽省宣城市绩溪县上庄镇（上庄景区水口片区）","note":"上庄水口片区的休息点，适合村落漫步途中短停；精确门牌和营业时间请到访前复核。","nav":"放空水口咖啡 上庄 绩溪"},
+  {"name":"上庄书局","cat":"逛店","lat":30.1225,"lon":118.445,"area":"上庄","addr":"安徽省宣城市绩溪县上庄镇上庄景区","note":"上庄村内的书香文旅节点，适合结合胡适故居和村巷慢逛；开放时间以现场公告为准。","nav":"上庄书局 绩溪"},
+  {"name":"紫园","cat":"景点","lat":30.047478,"lon":118.600734,"area":"绩溪县城东","addr":"安徽省宣城市绩溪县上马石村紫园景区","note":"集中展示徽派亭台、民居、祠堂和牌坊元素，适合用较轻松的节奏认识徽派建筑；开放与票务信息请以景区公告为准。","nav":"绩溪紫园"},
+  {"name":"西递景区","cat":"景点","lat":29.90334,"lon":117.99599,"area":"西递","addr":"安徽省黄山市黟县西递镇西递村","note":"可从西南入口进入，串联胡文光牌坊、七哲祠、传统宅院祠堂、古来桥和村东田野。节假日客流较大，建议尽量避开中午高峰。","nav":"西递古村景区"},
+  {"name":"西递三畏堂餐厅","cat":"正餐","lat":29.9037,"lon":117.9965,"area":"西递","addr":"安徽省黄山市黟县西递村内胡氏宗祠前小溪顺水约20米","note":"西递村内的徽菜选择，可关注笋干炒肉、臭鳜鱼、毛豆腐与时令野菜；高峰期请预留等位时间。","nav":"西递三畏堂餐厅"},
+  {"name":"徽娘私房菜","cat":"正餐","lat":29.9035,"lon":117.996,"area":"西递","addr":"安徽省黄山市黟县西递景区内，近胡氏宗祠敬爱堂","note":"靠近敬爱堂的餐饮选择，可关注土鸡汤、笋衣烧肉和时令菜；营业与排队情况以现场为准。","nav":"西递徽娘私房菜"},
+  {"name":"汪一挑馄饨（西递）","cat":"小吃","lat":29.9029,"lon":117.998,"area":"西递","addr":"安徽省黄山市黟县西递镇031县道东约150米","note":"适合想简单用餐时选择，可关注馄饨、酒酿饼、葛粉圆子与艾叶粿。","nav":"汪一挑馄饨 西递古村景区店"},
+  {"name":"塔川潦草·晓院","cat":"酒店","lat":30.013,"lon":118.0048,"area":"塔川","addr":"安徽省黄山市黟县宏村镇塔川村卢古组卢家尖10号","note":"塔川片区的住宿选择，便于串联塔川、卢村和宏村；房态、价格和对外服务请通过正规渠道确认。","nav":"塔川潦草晓院"},
+  {"name":"塔川","cat":"景点","lat":30.011771,"lon":118.0034,"area":"塔川","addr":"安徽省黄山市黟县宏村镇塔川村","note":"以村落、山景和秋色闻名，傍晚与清晨适合慢走和拍照。红叶受年份和天气影响，出行前可查看近期实景。","nav":"塔川景区"},
+  {"name":"宏村南湖","cat":"拍照","lat":30.00135,"lon":117.99055,"area":"宏村","addr":"安徽省黄山市黟县宏村景区南湖","note":"宏村经典拍摄区域，清晨和傍晚通常比正午更从容。节庆活动和竹筏表演可能调整，请以景区当日公告为准。","nav":"宏村南湖"},
+  {"name":"宏村月沼","cat":"拍照","lat":30.0031,"lon":117.99025,"area":"宏村","addr":"安徽省黄山市黟县宏村景区月沼","note":"宏村核心机位，得月楼、画景楼等餐馆位于月沼周边；清晨或晚间较适合避开团队高峰。","nav":"宏村月沼"},
+  {"name":"得月楼（月沼店）","cat":"正餐","lat":30.00318,"lon":117.99018,"area":"宏村","addr":"安徽省黄山市黟县宏村风景区月沼015号（汪氏宗祠对面）","note":"月沼边的餐饮选择，二楼部分位置可看月沼；如重视景观位，建议提前向商家确认。","nav":"宏村得月楼 月沼店"},
+  {"name":"画景楼（月沼店）","cat":"正餐","lat":30.00314,"lon":117.99013,"area":"宏村","addr":"安徽省黄山市黟县宏村月沼014号（汪氏宗祠对面）","note":"月沼边的餐饮选择，部分座位具有水景视野；营业时间、等位和景观位请提前向商家确认。","nav":"画景楼 宏村 月沼店"},
+  {"name":"添灯食堂","cat":"正餐","lat":30.0034,"lon":117.991,"area":"宏村","addr":"安徽省黄山市黟县宏村风景区中街81号（近月沼）","note":"宏村中街的徽菜选择，可关注臭鳜鱼、毛豆腐、刀板香和五加皮炒蛋；价格与营业时间请以商家公示为准。","nav":"添灯食堂 宏村"},
+  {"name":"徽八鲜","cat":"正餐","lat":30.0035,"lon":117.9912,"area":"宏村","addr":"安徽省黄山市黟县宏村景区中街86号","note":"宏村中街的餐饮选择，可关注臭鳜鱼、腊肉笋尖煲、酸菜野笋和桂花米酒；价格与营业时间请以商家公示为准。","nav":"徽八鲜 宏村"},
+  {"name":"枫杨楼（宏村大树店）","cat":"正餐","lat":30.0025,"lon":117.9889,"area":"宏村","addr":"安徽省黄山市黟县宏村村530国道旁宏村红杨树旁","note":"靠近古树一带的餐饮选择，适合想避开月沼核心客流时考虑；营业与等位情况以现场为准。","nav":"枫杨楼 宏村大树店"},
+  {"name":"旧时光咖啡馆","cat":"咖啡","lat":30.0036,"lon":117.9911,"area":"宏村","addr":"安徽省黄山市黟县宏村景区内（中街/月沼附近）","note":"咖啡与明信片、纪念品结合的休息点，适合在景区人流较密集时短暂停留。","nav":"旧时光咖啡馆 宏村"},
+  {"name":"培德堂小吃部","cat":"小吃","lat":30.00345,"lon":117.99105,"area":"宏村","addr":"安徽省黄山市黟县宏村景区内","note":"景区内的小吃选择，可关注鸭腿、栗子饼等，适合简单补充体力。","nav":"培德堂小吃部 宏村"},
+  {"name":"胡兴堂中式糕点","cat":"伴手礼","lat":30.0027,"lon":117.9892,"area":"宏村","addr":"安徽省黄山市黟县宏村景区内（宏村一店）","note":"可选购烧饼、徽墨酥等中式糕点；购买前建议查看配料、生产日期和价格。","nav":"胡兴堂中式糕点 宏村一店"},
+  {"name":"宏茗轩茶行","cat":"伴手礼","lat":30.0033,"lon":117.9914,"area":"宏村","addr":"安徽省黄山市黟县宏村景区内","note":"景区内的茶叶购买点；购买前建议查看明码标价、产地和包装信息。","nav":"宏茗轩茶行 宏村"},
+  {"name":"黟县东站","cat":"交通","lat":29.8857,"lon":118.048,"area":"黟县东","addr":"安徽省黄山市黟县西递镇源川村","note":"黟县的重要铁路交通节点，可换乘前往西递、宏村和县城方向的交通工具；旅游公交班次请以站牌和工作人员通知为准。","nav":"黟县东站"},
+  {"name":"宏村客运站","cat":"交通","lat":30.0002,"lon":117.9874,"area":"宏村","addr":"安徽省黄山市黟县宏村镇宏村景区南侧","note":"宏村景区南侧的下车与换乘节点，可衔接西递、黟县县城等方向；地图点为站区近似定位。","nav":"宏村客运站 黟县"},
+  {"name":"卢村观景平台","cat":"拍照","lat":30.016,"lon":117.9748,"area":"卢村","addr":"安徽省黄山市黟县宏村镇卢村附近G530","note":"可俯瞰卢村和田野，步行包含一小段缓坡。雾、日出和稻田颜色受季节与天气影响，建议出行前查看实景。","nav":"卢村观景平台 黟县"},
+  {"name":"谷喜咖啡","cat":"咖啡","lat":30.015,"lon":117.9755,"area":"卢村","addr":"安徽省黄山市黟县卢村观景台公路旁","note":"卢村观景平台附近的田野窗景咖啡馆，适合观景后休息。窗外颜色受季节影响，地图点为区域近似定位。","nav":"谷喜咖啡 卢村 黟县"},
+  {"name":"卡旺卡（宏村景区店）","cat":"小吃","lat":30.0001,"lon":117.9878,"area":"宏村","addr":"安徽省黄山市黟县宏村客运站/景区入口一带","note":"位于宏村客运站和景区入口一带，适合进出景区时顺路购买；地图点为区域近似定位。","nav":"卡旺卡 宏村景区店"},
+  {"name":"黄山城市符号馆","cat":"逛店","lat":29.9035,"lon":117.9962,"area":"西递","addr":"安徽省黄山市黟县西递景区七哲祠","note":"位于七哲祠，可看西递限定文创与“可以喝的徽墨”等内容；地图点为景区内近似定位。","nav":"黄山城市符号馆 西递"},
+  {"name":"望森林咖啡","cat":"咖啡","lat":29.9056,"lon":118.0011,"area":"西递村东","addr":"安徽省黄山市黟县西递村东，近古来桥/昆仑青旅后方一带","note":"以大窗、田野和山林视野为主要特色。精确门牌未稳定公开，地图为近似定位，导航时优先搜索店名。","nav":"望森林咖啡 西递"},
+  {"name":"骆驼巷子","cat":"正餐","lat":30.123,"lon":118.4449,"area":"上庄","addr":"安徽省宣城市绩溪县上庄镇上庄村","note":"百年老宅改造的农家乐和住宿业态，可作为上庄用餐选择；是否接待散客、营业时间和精确位置请提前确认。","nav":"骆驼巷子 上庄 绩溪"},
+  {"name":"一念山宅","cat":"酒店","lat":29.9297,"lon":117.9226,"area":"碧山","addr":"安徽省黄山市黟县碧山村石狮路4号","note":"碧山村内的住宿选择，便于步行探索村落、田野和书店；地图点为地址邻近定位，房态和价格请通过正规渠道查询。","nav":"一念山宅 黟县碧山村石狮路4号"},
+  {"name":"云门塔","cat":"拍照","lat":29.929,"lon":117.9238,"area":"碧山","addr":"安徽省黄山市黟县碧山村南侧田野","note":"碧山村口的田野地标，适合结合村落步行与拍照；地图点为区域近似定位。","nav":"云门塔 黟县碧山"},
+  {"name":"另一件事咖啡","cat":"咖啡","lat":29.93,"lon":117.9229,"area":"碧山","addr":"安徽省黄山市黟县碧山村村口小卖部附近","note":"碧山村口的咖啡休息点，可看远山和农田。公开照片中的花田颜色受季节影响；精确门牌和营业状态请提前复核。","nav":"另一件事咖啡 碧山"},
+  {"name":"碧山书局","cat":"逛店","lat":29.932,"lon":117.9213,"area":"碧山","addr":"安徽省黄山市黟县碧山村启泰堂","note":"由祠堂改造的乡村书店，是碧山慢逛的代表性节点。公开常规营业时间仅供参考，到访前请查看最新通知。","nav":"碧山书局"},
+  {"name":"碧山工销社","cat":"逛店","lat":29.9323,"lon":117.9208,"area":"碧山","addr":"安徽省黄山市黟县碧山村内","note":"老供销社改造的生活方式空间，适合看文创和日用杂货并短暂停留；地图点为村内近似定位。","nav":"碧山工销社"},
+  {"name":"碧山油厂／猪栏酒吧老油厂店","cat":"拍照","lat":29.933,"lon":117.9018,"area":"碧山外围","addr":"安徽省黄山市黟县碧山村老油厂一带","note":"可关注旧油厂建筑、公共空间和田野氛围。非住客是否可以进入、用餐或使用其他服务，请提前向经营方确认。","nav":"猪栏酒吧乡村客栈 老油厂店"},
+  {"name":"黟县古城","cat":"景点","lat":29.9252,"lon":117.9424,"area":"黟县县城","addr":"安徽省黄山市黟县碧阳镇北街一带","note":"适合慢走北街和沿河片区，结合古城街巷、地方生活与周边餐饮安排；地图点为古城核心区近似定位。","nav":"黟县古城"},
+  {"name":"黟云楼","cat":"正餐","lat":29.9247,"lon":117.9415,"area":"黟县古城","addr":"安徽省黄山市黟县沿河西路11号","note":"黟县古城附近的餐饮选择；营业、等位和最后点单时间请提前确认。","nav":"黟云楼 黟县沿河西路11号"},
+  {"name":"西递公交站（西侧）","cat":"交通","lat":29.9027,"lon":117.9938,"area":"西递","addr":"安徽省黄山市黟县西递景区西侧游客中心/公交候车区","note":"西递景区西侧的公交候车与换乘区域，可衔接宏村和其他方向；临时班次请以现场站牌和工作人员通知为准。","nav":"西递公交站 黟县"},
+  {"name":"胡文光牌坊·玉米巨龙晒秋","cat":"拍照","lat":29.9029,"lon":117.9949,"area":"西递","addr":"安徽省黄山市黟县西递景区胡文光牌坊广场","note":"胡文光牌坊广场一带的季节性晒秋装置拍摄点。装置内容和开放状态可能随季节变化，请以现场为准。","nav":"胡文光牌坊 西递"},
+  {"name":"卢村木雕楼景区","cat":"景点","lat":30.0181,"lon":117.973,"area":"卢村","addr":"安徽省黄山市黟县宏村镇卢村","note":"可结合木雕楼、村巷、驷车桥和观景平台游览，适合对徽派木雕与村落景观感兴趣的旅行者。开放时间和票价请以景区公告为准。","nav":"卢村木雕楼景区"},
+  {"name":"中正坊·白石鼓历史文化街区","cat":"拍照","lat":30.0704,"lon":118.5925,"area":"绩溪古城","addr":"安徽省宣城市绩溪县华阳镇适之街—良安路之间","note":"位于博物馆和文庙附近，可看中正坊、白石鼓一带的传统街巷与生活肌理，再步行前往糸巷。地图点为街区近似定位。","nav":"华阳中正坊 绩溪"},
+  {"name":"杨林水口","cat":"拍照","lat":30.1198,"lon":118.4481,"area":"上庄","addr":"安徽省宣城市绩溪县上庄镇上庄村入口杨林桥一带","note":"上庄村入口的水口空间，可看古树、杨林桥、常溪河和村落门户格局。地图点为村口近似定位。","nav":"绩溪上庄杨林水口"},
+  {"name":"胡开文纪念馆／旧居","cat":"景点","lat":30.1234,"lon":118.4432,"area":"上庄","addr":"安徽省宣城市绩溪县上庄镇上庄村","note":"可了解徽墨大师胡开文、墨模与徽墨产业历史。纪念馆、旧居和老墨厂的开放范围可能不同，请向现场工作人员确认；地图点为村内近似定位。","nav":"胡开文纪念馆 绩溪上庄"}
+];
+
+const colors={"酒店": "#8d5a44", "交通": "#416b8a", "景点": "#3e7657", "拍照": "#8b6a9b", "早餐": "#d9913b", "正餐": "#b95c43", "小吃": "#d07b43", "咖啡": "#765b4d", "逛店": "#6d738d", "伴手礼": "#9a7b32"};
+const cats=["酒店", "交通", "景点", "拍照", "早餐", "正餐", "小吃", "咖啡", "逛店", "伴手礼"];
+let mapUsesGcj=true;
+function gcjToMapLatLng(lat,lon){if(mapUsesGcj)return[lat,lon];const [x,y]=gcj02ToWgs84(lon,lat);return[y,x]}
+function wgsToMapLatLng(lat,lon){if(!mapUsesGcj)return[lat,lon];const [x,y]=wgs84ToGcj02(lon,lat);return[y,x]}
+const map=L.map('map',{zoomControl:false}).setView(gcjToMapLatLng(30.02,118.28),10);
+L.control.zoom({position:'topright'}).addTo(map);
+const mainlandTiles=L.tileLayer('https://wprd0{s}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7',{subdomains:'1234',maxZoom:18,attribution:'© <a href="https://www.amap.com/" target="_blank">高德地图</a>'});
+const osmTiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});
+let mainlandTileLoads=0,mainlandTileErrors=0,usingFallbackTiles=false;
+mainlandTiles.on('tileload',()=>mainlandTileLoads++).on('tileerror',()=>{mainlandTileErrors++;if(mainlandTileErrors>=6&&!mainlandTileLoads)switchToFallbackTiles()}).addTo(map);
+const layers={}, markers=[];
+cats.forEach(c=>{layers[c]=L.layerGroup().addTo(map);});
+function markerIcon(cat){return L.divIcon({className:'',html:`<div style="width:16px;height:16px;border-radius:50%;background:${colors[cat]||'#555'};border:2px solid white;box-shadow:0 1px 5px #0005"></div>`,iconSize:[16,16],iconAnchor:[8,8]})}
+pois.forEach((p,i)=>{const m=L.marker(gcjToMapLatLng(p.lat,p.lon),{icon:markerIcon(p.cat)}).addTo(layers[p.cat]);m.on('click',()=>showPoi(i));markers.push(m);});
+const filters=document.getElementById('filters');
+function hexToRgba(hex,alpha){const n=parseInt(hex.slice(1),16);return `rgba(${n>>16},${n>>8&255},${n&255},${alpha})`}
+function focusCategory(c){const bounds=L.latLngBounds(pois.filter(p=>p.cat===c).map(p=>gcjToMapLatLng(p.lat,p.lon)));if(!bounds.isValid())return;if(bounds.getNorthEast().equals(bounds.getSouthWest()))map.flyTo(bounds.getCenter(),15,{duration:.55});else map.fitBounds(bounds,{padding:[48,48],maxZoom:14,animate:true,duration:.55})}
+cats.forEach(c=>{const b=document.createElement('button');b.className='f';b.textContent=c;b.style.setProperty('--cat',colors[c]);b.style.setProperty('--cat-bg',hexToRgba(colors[c],.1));b.dataset.on='1';b.dataset.cat=c;b.setAttribute('aria-pressed','true');b.onclick=()=>{if(b.dataset.on==='1'){map.removeLayer(layers[c]);b.dataset.on='0';b.classList.add('off');b.setAttribute('aria-pressed','false')}else{layers[c].addTo(map);b.dataset.on='1';b.classList.remove('off');b.setAttribute('aria-pressed','true');focusCategory(c)}};filters.appendChild(b);});
+const searchInput=document.getElementById('searchInput'),searchResults=document.getElementById('searchResults');
+let searchMatches=[];
+function closeSearch(){searchResults.classList.remove('show')}
+function renderSearch(){const q=searchInput.value.trim().toLowerCase();searchResults.innerHTML='';searchMatches=[];if(!q)return closeSearch();searchMatches=pois.map((p,i)=>({p,i,text:`${p.name} ${p.area} ${p.cat} ${p.addr} ${p.note} ${p.nav}`.toLowerCase()})).filter(x=>x.text.includes(q)).sort((a,b)=>Number(b.p.name.toLowerCase().startsWith(q))-Number(a.p.name.toLowerCase().startsWith(q))).slice(0,6);if(!searchMatches.length){searchResults.innerHTML='<div class="search-empty">没有找到匹配地点</div>'}else searchMatches.forEach(({p,i})=>{const b=document.createElement('button');b.className='search-result';b.setAttribute('role','option');const name=document.createElement('b');name.textContent=p.name;const meta=document.createElement('small');meta.textContent=p.area;const cat=document.createElement('em');cat.textContent=p.cat;cat.style.color=colors[p.cat];b.append(name,meta,cat);b.onclick=()=>selectSearch(i);searchResults.appendChild(b)});searchResults.classList.add('show')}
+function selectSearch(i){const p=pois[i],filter=filters.querySelector(`[data-cat="${p.cat}"]`);if(!map.hasLayer(layers[p.cat])){layers[p.cat].addTo(map);filter.dataset.on='1';filter.classList.remove('off');filter.setAttribute('aria-pressed','true')}searchInput.value=p.name;closeSearch();searchInput.blur();map.flyTo(gcjToMapLatLng(p.lat,p.lon),15,{duration:.55});showPoi(i)}
+searchInput.addEventListener('input',renderSearch);searchInput.addEventListener('focus',()=>{if(searchInput.value.trim())renderSearch()});searchInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&searchMatches.length){e.preventDefault();selectSearch(searchMatches[0].i)}else if(e.key==='Escape')closeSearch()});
+map.on('click',()=>{closeSearch();searchInput.blur()});
+function positionZoom(){const top=document.querySelector('.top'),corner=document.querySelector('.leaflet-top.leaflet-right');if(!corner)return;corner.style.top=innerWidth<850?`${top.offsetTop+top.offsetHeight+7}px`:'0px'}
+positionZoom();addEventListener('resize',positionZoom);
+function toggleLegend(){document.getElementById('legend').classList.toggle('open')}
+function closeLegend(){document.getElementById('legend').classList.remove('open')}
+function copyText(t,message){navigator.clipboard?.writeText(t).then(()=>alert(message||'已复制：'+t)).catch(()=>prompt('长按复制：',t));}
+function showPoi(i){closeLegend();const p=pois[i]; const q=encodeURIComponent(p.nav); const aq=encodeURIComponent(p.addr);
+document.getElementById('panelBody').innerHTML=`<h2>${p.name}</h2><span class="tag">${p.cat}</span><span class="tag">${p.area}</span>
+<div class="addr"><b>地址</b><br>${p.addr}</div><p>${p.note}</p>
+<div class="actions"><button onclick='copyText(${JSON.stringify(p.addr)})'>复制地址</button><button class="secondary" onclick='copyText(${JSON.stringify(p.name)})'>复制名称</button>
+<a href="https://uri.amap.com/search?keyword=${q}" target="_blank">高德搜索</a><a class="secondary" href="https://maps.apple.com/?q=${aq}" target="_blank">Apple 地图</a><button class="route-add" onclick="addRouteStop(${i})">＋ 加入路线</button></div>`;
+document.getElementById('panel').classList.add('show');}
+function closePanel(){document.getElementById('panel').classList.remove('show')}
+const routeStopLayer=L.layerGroup().addTo(map);
+let routeStops=[],routeLayer=null,routeMode='pedestrian',routeBusy=false,lastRouteSummary='',lastRouteCoords=[];
+const routeModeNames={pedestrian:'步行',bicycle:'骑车',auto:'开车',multimodal:'公交'};
+function toggleRoutePanel(force){closeLegend();const box=document.getElementById('routeBox');box.classList.toggle('show',typeof force==='boolean'?force:!box.classList.contains('show'))}
+function addRouteStop(i){const p=pois[i];routeStops.push({name:p.name,lat:p.lat,lon:p.lon,addr:p.addr});document.getElementById('routeStopsWrap').open=true;renderRouteStops();closePanel();toggleRoutePanel(true);showRouteMessage(`已加入“${p.name}”`,false)}
+function renderRouteStops(){
+  const list=document.getElementById('routeStops');list.innerHTML='';routeStopLayer.clearLayers();
+  if(!routeStops.length){list.innerHTML='<li class="empty">从任意地点详情中点“加入路线”，至少选择 2 个地点。</li>'}
+  routeStops.forEach((s,i)=>{
+    const li=document.createElement('li');li.className='route-stop';
+    const num=document.createElement('span');num.className='num';num.textContent=i+1;
+    const name=document.createElement('span');name.className='stop-name';name.textContent=s.name;
+    const tools=document.createElement('span');tools.className='stop-tools';
+    [['↑',-1,'上移'],['↓',1,'下移'],['×',0,'移除']].forEach(([label,delta,title])=>{const b=document.createElement('button');b.textContent=label;b.title=title;b.onclick=()=>delta?moveRouteStop(i,delta):removeRouteStop(i);tools.appendChild(b)});
+    li.append(num,name,tools);list.appendChild(li);
+    const icon=L.divIcon({className:'route-number-marker',html:`<div style="display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#294b3d;color:white;border:2px solid white;box-shadow:0 1px 6px #0006;font:800 11px sans-serif">${i+1}</div>`,iconSize:[22,22],iconAnchor:[11,11]});
+    L.marker(gcjToMapLatLng(s.lat,s.lon),{icon,zIndexOffset:800,interactive:false}).addTo(routeStopLayer);
+  });
+  document.getElementById('routeCount').textContent=routeStops.length;
+  document.getElementById('routeStopSummary').textContent=`路线地点（${routeStops.length}）`;
+  document.getElementById('planRoute').disabled=routeStops.length<2||routeBusy;
+}
+function moveRouteStop(i,delta){const j=i+delta;if(j<0||j>=routeStops.length)return;[routeStops[i],routeStops[j]]=[routeStops[j],routeStops[i]];clearDrawnRoute();renderRouteStops();showRouteMessage('顺序已调整，请重新计算路线。',false)}
+function removeRouteStop(i){routeStops.splice(i,1);clearDrawnRoute();renderRouteStops();showRouteMessage(routeStops.length?'地点已移除，请重新计算路线。':'',false)}
+function clearDrawnRoute(){lastRouteSummary='';lastRouteCoords=[];if(routeLayer){map.removeLayer(routeLayer);routeLayer=null}}
+function clearRoute(){routeStops=[];clearDrawnRoute();renderRouteStops();showRouteMessage('',false)}
+function setRouteMode(mode){routeMode=mode;document.querySelectorAll('.route-mode').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));clearDrawnRoute();if(routeStops.length>1)showRouteMessage(`已切换为${routeModeNames[mode]}，请重新计算。`,false)}
+function showRouteMessage(html,isError){const el=document.getElementById('routeResult');el.innerHTML=html;el.classList.toggle('show',!!html);el.classList.toggle('error',!!isError)}
+function decodeValhallaShape(encoded){let index=0,lat=0,lon=0,coords=[];while(index<encoded.length){let b,shift=0,result=0;do{b=encoded.charCodeAt(index++)-63;result|=(b&31)<<shift;shift+=5}while(b>=32);lat+=(result&1)?~(result>>1):(result>>1);shift=0;result=0;do{b=encoded.charCodeAt(index++)-63;result|=(b&31)<<shift;shift+=5}while(b>=32);lon+=(result&1)?~(result>>1):(result>>1);coords.push([lat/1e6,lon/1e6])}return coords}
+function formatDuration(seconds){const mins=Math.max(1,Math.round(seconds/60));return mins<60?`${mins} 分钟`:`${Math.floor(mins/60)} 小时${mins%60?` ${mins%60} 分`:''}`}
+function formatDistance(km){return km<10?`${km.toFixed(1)} 公里`:`${Math.round(km)} 公里`}
+async function planRoute(){
+  if(routeBusy||routeStops.length<2)return;routeBusy=true;const btn=document.getElementById('planRoute');btn.disabled=true;btn.textContent='计算中…';showRouteMessage('正在沿实际道路计算，请稍候…',false);
+  const payload={locations:routeStops.map(s=>{const [lon,lat]=gcj02ToWgs84(s.lon,s.lat);return{lat,lon}}),costing:routeMode,units:'kilometers',language:'zh-CN'};
+  try{
+    const res=await fetch('https://valhalla1.openstreetmap.de/route',{method:'POST',headers:{'Content-Type':'application/json','X-Client-Id':`${location.host}${location.pathname}`},body:JSON.stringify(payload)});
+    const data=await res.json();if(!res.ok||!data.trip)throw new Error(data.error||data.status_message||'路线服务暂时不可用');
+    const coords=data.trip.legs.flatMap((leg,i)=>{const points=decodeValhallaShape(leg.shape);return i?points.slice(1):points});
+    clearDrawnRoute();lastRouteCoords=coords;routeLayer=L.polyline(coords.map(([lat,lon])=>wgsToMapLatLng(lat,lon)),{color:'#1769aa',weight:6,opacity:.82,lineJoin:'round'}).addTo(map);map.fitBounds(routeLayer.getBounds(),{padding:[42,42]});
+    const s=data.trip.summary;lastRouteSummary=`${routeModeNames[routeMode]}路线｜${formatDistance(s.length)}｜约 ${formatDuration(s.time)}`;document.getElementById('routeStopsWrap').open=false;showRouteMessage(`<b>${routeModeNames[routeMode]}路线：${formatDistance(s.length)} · 约 ${formatDuration(s.time)}</b><br>${routeStops.length} 个地点，按当前顺序规划。${externalRouteLinks()}`,false);
+  }catch(err){
+    const transit=routeMode==='multimodal';showRouteMessage(`${transit?'当地开放公交时刻数据暂未覆盖，无法在页内生成可靠公交线路。':'路线暂时无法计算：'+err.message}${externalRouteLinks()}`,true);
+  }finally{routeBusy=false;btn.textContent='计算路线';btn.disabled=routeStops.length<2}
+}
+function outOfChina(lon,lat){return lon<72.004||lon>137.8347||lat<0.8293||lat>55.8271}
+function transformLat(x,y){return -100+2*x+3*y+.2*y*y+.1*x*y+.2*Math.sqrt(Math.abs(x))+(20*Math.sin(6*x*Math.PI)+20*Math.sin(2*x*Math.PI))*2/3+(20*Math.sin(y*Math.PI)+40*Math.sin(y/3*Math.PI))*2/3+(160*Math.sin(y/12*Math.PI)+320*Math.sin(y*Math.PI/30))*2/3}
+function transformLon(x,y){return 300+x+2*y+.1*x*x+.1*x*y+.1*Math.sqrt(Math.abs(x))+(20*Math.sin(6*x*Math.PI)+20*Math.sin(2*x*Math.PI))*2/3+(20*Math.sin(x*Math.PI)+40*Math.sin(x/3*Math.PI))*2/3+(150*Math.sin(x/12*Math.PI)+300*Math.sin(x/30*Math.PI))*2/3}
+function wgs84ToGcj02(lon,lat){if(outOfChina(lon,lat))return[lon,lat];const a=6378245,ee=.006693421622965943,dLat=transformLat(lon-105,lat-35),dLon=transformLon(lon-105,lat-35),rad=lat/180*Math.PI,magic=1-ee*Math.sin(rad)**2,sqrt=Math.sqrt(magic);return[lon+dLon*180/(a/sqrt*Math.cos(rad)*Math.PI),lat+dLat*180/(a*(1-ee)/(magic*sqrt)*Math.PI)]}
+function gcj02ToWgs84(lon,lat){const [x,y]=wgs84ToGcj02(lon,lat);return[lon*2-x,lat*2-y]}
+function switchToFallbackTiles(){if(usingFallbackTiles)return;usingFallbackTiles=true;const center=map.getCenter(),zoom=map.getZoom(),[lon,lat]=gcj02ToWgs84(center.lng,center.lat);mapUsesGcj=false;map.removeLayer(mainlandTiles);osmTiles.addTo(map);map.setView([lat,lon],zoom,{animate:false});markers.forEach((m,i)=>m.setLatLng(gcjToMapLatLng(pois[i].lat,pois[i].lon)));renderRouteStops();if(userLocationMarker&&lastUserLocationWgs)userLocationMarker.setLatLng(wgsToMapLatLng(...lastUserLocationWgs));if(routeLayer&&lastRouteCoords.length){map.removeLayer(routeLayer);routeLayer=L.polyline(lastRouteCoords.map(([lat,lon])=>wgsToMapLatLng(lat,lon)),{color:'#1769aa',weight:6,opacity:.82,lineJoin:'round'}).addTo(map)}}
+function buildAmapRouteUrl(){if(routeStops.length<2)return'https://uri.amap.com';const modeMap={pedestrian:'walk',bicycle:'ride',auto:'car',multimodal:'bus'},fmt=s=>`${s.lon.toFixed(6)},${s.lat.toFixed(6)},${s.name}`,params=new URLSearchParams({from:fmt(routeStops[0]),to:fmt(routeStops[routeStops.length-1]),mode:modeMap[routeMode],policy:'0',src:'travel-planning-studio',callnative:'1'});if(routeMode==='auto'&&routeStops.length>2)params.set('via',fmt(routeStops[1]));return`https://uri.amap.com/navigation?${params}`}
+function buildAppleRouteUrl(){if(routeStops.length<2)return'https://maps.apple.com';const start=gcj02ToWgs84(routeStops[0].lon,routeStops[0].lat),end=gcj02ToWgs84(routeStops[routeStops.length-1].lon,routeStops[routeStops.length-1].lat),modeMap={pedestrian:'w',auto:'d',multimodal:'r'},params=new URLSearchParams({saddr:`${start[1]},${start[0]}`,daddr:`${end[1]},${end[0]}`});if(modeMap[routeMode])params.set('dirflg',modeMap[routeMode]);return`https://maps.apple.com/?${params}`}
+function externalRouteLinks(){return`<div class="external-links"><a href="${buildAmapRouteUrl()}" target="_blank" rel="noopener">高德继续</a><a class="apple" href="${buildAppleRouteUrl()}" target="_blank" rel="noopener">Apple 地图继续</a></div>`}
+function copyRoute(){if(!routeStops.length)return alert('请先加入路线地点');const text=`${lastRouteSummary||routeModeNames[routeMode]+'路线'}\n\n地点顺序：\n`+routeStops.map((s,i)=>`${i+1}. ${s.name}\n${s.addr}`).join('\n\n')+`\n\n旅行地图：${location.href}`;copyText(text,'已复制路线清单（含出行方式、地点顺序、地址和地图链接）')}
+let userLocationMarker=null,lastUserLocationWgs=null;
+function locateMe(){if(!navigator.geolocation)return alert('浏览器不支持定位');navigator.geolocation.getCurrentPosition(pos=>{lastUserLocationWgs=[pos.coords.latitude,pos.coords.longitude];const ll=wgsToMapLatLng(...lastUserLocationWgs);if(userLocationMarker)userLocationMarker.setLatLng(ll);else userLocationMarker=L.circleMarker(ll,{radius:8,color:'#1769aa',fillOpacity:.8}).addTo(map).bindPopup('你的位置');userLocationMarker.openPopup();map.setView(ll,15)},err=>alert(err.code===1?'定位权限未开启，请在浏览器设置中允许访问位置。':'暂时无法获取位置，请稍后再试。'),{enableHighAccuracy:true,timeout:10000,maximumAge:30000});}
+</script></body></html>
